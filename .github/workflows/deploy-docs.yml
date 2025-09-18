@@ -22,6 +22,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install mkdocs mkdocs-material
 
+      - name: Configure git for GitHub Actions
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git remote set-url origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}
+
       - name: Build and deploy docs
         run: |
           mkdocs gh-deploy --force
