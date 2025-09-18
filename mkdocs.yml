@@ -3,10 +3,10 @@ site_description: Python SDK for Kafka event streaming (Grasp Labs)
 site_author: Grasp Labs
 repo_url: https://github.com/grasp-labs/ds-event-stream-python-sdk
 nav:
-  - Home: README.md
-  - Usage: usage.md
-  - API Reference: api.md
-  - Testing: testing.md
-  - License: license.md
+  - Home: docs/README.md
+  - Usage: docs/usage.md
+  - API Reference: docs/api.md
+  - Testing: docs/testing.md
+  - License: docs/license.md
 theme:
   name: material
