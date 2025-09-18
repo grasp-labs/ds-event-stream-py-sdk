@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
 from dseventstream.kafka.kafka_service import KafkaProducerService, KafkaConsumerService
+from dseventstream.kafka.kafka_config import KafkaConfig
 from dseventstream.models.event import Event
 
 class TestKafkaProducerServiceMock(unittest.TestCase):
@@ -8,7 +9,8 @@ class TestKafkaProducerServiceMock(unittest.TestCase):
     def test_send_event(self, mock_producer_class):
         mock_producer = MagicMock()
         mock_producer_class.return_value = mock_producer
-        producer = KafkaProducerService(bootstrap_servers="mock:9092")
+        config = KafkaConfig(bootstrap_servers="mock:9092")
+        producer = KafkaProducerService(config=config)
         event = Event(
             id="test-id",
             session_id="test-session",
@@ -35,7 +37,8 @@ class TestKafkaConsumerServiceMock(unittest.TestCase):
             KeyboardInterrupt()
         ]
         mock_consumer_class.return_value = mock_consumer
-        consumer = KafkaConsumerService(bootstrap_servers="mock:9092", group_id="mock-group")
+        config = KafkaConfig(bootstrap_servers="mock:9092")
+        consumer = KafkaConsumerService(config=config, group_id="mock-group")
         received = []
         def on_message(msg):
             received.append(msg)

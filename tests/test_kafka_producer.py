@@ -2,13 +2,15 @@ import unittest
 from unittest.mock import MagicMock, patch
 from dseventstream.models.event import Event
 from dseventstream.kafka.kafka_service import KafkaProducerService
+from dseventstream.kafka.kafka_config import KafkaConfig
 
 class TestKafkaProducerService(unittest.TestCase):
     @patch("dseventstream.kafka.kafka_service.Producer")
     def test_send_event(self, mock_producer_class):
         mock_producer = MagicMock()
         mock_producer_class.return_value = mock_producer
-        producer = KafkaProducerService(bootstrap_servers="localhost:9092")
+        config = KafkaConfig(bootstrap_servers="localhost:9092")
+        producer = KafkaProducerService(config=config)
         event = Event(
             id="test-id",
             session_id="test-session",

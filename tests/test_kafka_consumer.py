@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 from dseventstream.models.event import Event
 from dseventstream.kafka.kafka_service import KafkaProducerService, KafkaConsumerService
+from dseventstream.kafka.kafka_config import KafkaConfig
 
 class TestKafkaConsumerService(unittest.TestCase):
     def setUp(self):
@@ -32,10 +33,11 @@ class TestKafkaConsumerService(unittest.TestCase):
         def fake_consume(topic, callback):
             callback(self.event.__dict__)
 
-        consumer = KafkaConsumerService(bootstrap_servers="localhost:9092", group_id="test-group")
+        config = KafkaConfig(bootstrap_servers="localhost:9092")
+        consumer = KafkaConsumerService(config=config, group_id="test-group")
         consumer.consume = fake_consume
 
-        producer = KafkaProducerService(bootstrap_servers="localhost:9092")
+        producer = KafkaProducerService(config=config)
         # Simulate sending event
         producer.send(self.topic, self.event)
         # Simulate consuming event

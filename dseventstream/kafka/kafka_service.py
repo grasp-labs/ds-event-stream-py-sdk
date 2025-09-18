@@ -9,13 +9,13 @@ from dseventstream.models.event import Event
 
 from confluent_kafka import Producer, Consumer
 import json
-
+from dseventstream.kafka.kafka_config import KafkaConfig
 
 
 class KafkaProducerService:
-    def __init__(self, bootstrap_servers: str):
-        self.bootstrap_servers = bootstrap_servers
-        self.producer = Producer({'bootstrap.servers': self.bootstrap_servers})
+    def __init__(self, config: KafkaConfig):
+        self.config = config
+        self.producer = Producer(self.config.to_dict())
 
     def send(self, topic: str, event: Event, key: Optional[str] = None):
         """
@@ -43,15 +43,16 @@ class KafkaProducerService:
 
 
 class KafkaConsumerService:
-    def __init__(self, bootstrap_servers: str, group_id: str):
-        self.bootstrap_servers = bootstrap_servers
+    def __init__(self, config: KafkaConfig, group_id: str):
+        self.config = config
         self.group_id = group_id
-        self.consumer = Consumer({
-            'bootstrap.servers': self.bootstrap_servers,
+        consumer_config = self.config.to_dict()
+        consumer_config.update({
             'group.id': self.group_id,
             'auto.offset.reset': 'earliest',
             'enable.auto.commit': True
         })
+        self.consumer = Consumer(consumer_config)
 
     def consume(self, topic: str, on_message: Callable[[Any], None]):
         self.consumer.subscribe([topic])
@@ -76,28 +77,36 @@ def create_kafka_producer_prod() -> KafkaProducerService:
     """
     Create a KafkaProducerService instance for production environment.
     """
-    bootstrap_servers = "kafka-prod:9092"  # Replace with your actual prod server
-    return KafkaProducerService(bootstrap_servers=bootstrap_servers)
+    config = KafkaConfig(
+        bootstrap_servers="kafka-prod:9092",
+        username="service-principal",
+        password="secret"
+    )
+    return KafkaProducerService(config=config)
 
 def create_kafka_producer_dev() -> KafkaProducerService:
     """
     Create a KafkaProducerService instance for development environment.
     """
-    bootstrap_servers = "localhost:9092"  # Replace with your actual dev server
-    return KafkaProducerService(bootstrap_servers=bootstrap_servers)
+    config = KafkaConfig(bootstrap_servers="localhost:9092")
+    return KafkaProducerService(config=config)
 
 def create_kafka_consumer_prod() -> KafkaConsumerService:
     """
     Create a KafkaConsumerService instance for production environment.
     """
-    bootstrap_servers = "kafka-prod:9092"  # Replace with your actual prod server
+    config = KafkaConfig(
+        bootstrap_servers="kafka-prod:9092",
+        username="service-principal",
+        password="secret"
+    )
     group_id = "ds-event-stream-prod"
-    return KafkaConsumerService(bootstrap_servers=bootstrap_servers, group_id=group_id)
+    return KafkaConsumerService(config=config, group_id=group_id)
 
 def create_kafka_consumer_dev() -> KafkaConsumerService:
     """
     Create a KafkaConsumerService instance for development environment.
     """
-    bootstrap_servers = "localhost:9092"  # Replace with your actual dev server
+    config = KafkaConfig(bootstrap_servers="localhost:9092")
     group_id = "ds-event-stream-dev"
-    return KafkaConsumerService(bootstrap_servers=bootstrap_servers, group_id=group_id)
+    return KafkaConsumerService(config=config, group_id=group_id)
