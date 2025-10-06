@@ -1,11 +1,9 @@
 name: Deploy to PyPI
 
 on:
-  pull_request:
+  push:
     branches:
       - main
-    types:
-      - closed
 
 permissions:
   contents: write
@@ -13,7 +11,6 @@ permissions:
 
 jobs:
   deploy:
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
@@ -44,17 +41,18 @@ jobs:
       - name: Determine version bump type
         id: bump_type
         run: |
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          PR_BODY="${{ github.event.pull_request.body }}"
+          # Get PR title from the merge commit message (first line)
+          COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
+          PR_TITLE=$(echo "$COMMIT_MESSAGE" | head -n 1)
 
+          echo "Commit Message: $COMMIT_MESSAGE"
           echo "PR Title: $PR_TITLE"
-          echo "PR Body: $PR_BODY"
 
-          # Check for version bump indicators in PR title or body
-          if echo "$PR_TITLE $PR_BODY" | grep -i -E "(breaking|major|BREAKING CHANGE)" > /dev/null; then
+          # Check for version bump indicators in PR title
+          if echo "$PR_TITLE" | grep -i -E "(breaking|major|BREAKING CHANGE)" > /dev/null; then
             echo "bump_type=major" >> $GITHUB_OUTPUT
             echo "Detected: MAJOR version bump"
-          elif echo "$PR_TITLE $PR_BODY" | grep -i -E "(feat|feature|minor)" > /dev/null; then
+          elif echo "$PR_TITLE" | grep -i -E "(feat|feature|minor)" > /dev/null; then
             echo "bump_type=minor" >> $GITHUB_OUTPUT
             echo "Detected: MINOR version bump"
           else
@@ -139,10 +137,10 @@ jobs:
           body: |
             ## 🚀 Release v${{ steps.new_version.outputs.new_version }}
 
-            **Automated release from PR #${{ github.event.pull_request.number }}**
+            **Automated release from commit ${{ github.sha }}**
 
             ### Changes
-            ${{ github.event.pull_request.title }}
+            ${{ github.event.head_commit.message }}
 
             ### Version Bump
             - **Previous version:** ${{ steps.current_version.outputs.current_version }}
@@ -152,7 +150,7 @@ jobs:
             ### Links
             - **PyPI Package:** https://pypi.org/project/ds-event-stream-python-sdk/${{ steps.new_version.outputs.new_version }}/
             - **Documentation:** https://grasp-labs.github.io/ds-event-stream-py-sdk/
-            - **Commit:** ${{ github.event.pull_request.head.sha }}
+            - **Commit:** ${{ github.sha }}
 
             ### Installation
             ```bash
