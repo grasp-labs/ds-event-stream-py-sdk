@@ -36,8 +36,24 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git tag "v${{ steps.current_version.outputs.current_version }}"
-          git push origin "v${{ steps.current_version.outputs.current_version }}"
+
+          TAG_NAME="v${{ steps.current_version.outputs.current_version }}"
+
+          # Check if tag already exists locally and delete it
+          if git tag -l | grep -q "^${TAG_NAME}$"; then
+            echo "Tag ${TAG_NAME} already exists locally, deleting it"
+            git tag -d "${TAG_NAME}"
+          fi
+
+          # Check if tag exists on remote and delete it
+          if git ls-remote --tags origin | grep -q "refs/tags/${TAG_NAME}$"; then
+            echo "Tag ${TAG_NAME} already exists on remote, deleting it"
+            git push origin ":refs/tags/${TAG_NAME}" || echo "Failed to delete remote tag, continuing..."
+          fi
+
+          # Create and push new tag
+          git tag "${TAG_NAME}"
+          git push origin "${TAG_NAME}"
 
       - name: Build package
         run: |
