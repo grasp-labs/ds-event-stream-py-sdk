@@ -2,6 +2,12 @@ name: Deploy to PyPI
 
 on:
   workflow_dispatch:
+    inputs:
+      create_tag:
+        description: 'Create git tag (only if you have permissions)'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -60,47 +66,75 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            // First create the tag
-            try {
-              await github.rest.git.createRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: 'refs/tags/${{ steps.release_info.outputs.tag_name }}',
-                sha: context.sha
-              });
-              console.log('Tag created: ${{ steps.release_info.outputs.tag_name }}');
-            } catch (error) {
-              if (error.status === 422) {
-                console.log('Tag already exists: ${{ steps.release_info.outputs.tag_name }}');
-              } else {
-                throw error;
+            const tagName = '${{ steps.release_info.outputs.tag_name }}';
+            const version = '${{ steps.current_version.outputs.current_version }}';
+
+            // Only create tag if requested and we have permissions
+            if ('${{ github.event.inputs.create_tag }}' === 'true') {
+              try {
+                await github.rest.git.createRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: `refs/tags/${tagName}`,
+                  sha: context.sha
+                });
+                console.log(`Tag created: ${tagName}`);
+              } catch (error) {
+                if (error.status === 422) {
+                  console.log(`Tag already exists: ${tagName}`);
+                } else {
+                  console.log(`Failed to create tag: ${error.message}`);
+                  console.log('Continuing without tag creation...');
+                }
               }
+            } else {
+              console.log('Tag creation skipped (create_tag=false or no permissions)');
             }
 
-            // Then create the release
-            const { data: release } = await github.rest.repos.createRelease({
+            // Check if tag exists before creating release
+            let tagExists = false;
+            try {
+              await github.rest.git.getRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `tags/${tagName}`
+              });
+              tagExists = true;
+              console.log(`Tag ${tagName} exists, creating release...`);
+            } catch (error) {
+              console.log(`Tag ${tagName} does not exist, creating release without tag...`);
+            }
+
+            // Create the release (with or without tag)
+            const releaseData = {
               owner: context.repo.owner,
               repo: context.repo.repo,
-              tag_name: '${{ steps.release_info.outputs.tag_name }}',
-              name: 'Release ${{ steps.release_info.outputs.tag_name }}',
-              body: `## 🚀 Release ${{ steps.release_info.outputs.tag_name }}
+              name: `Release ${tagName}`,
+              body: `## 🚀 Release ${tagName}
 
             **Automated deployment to PyPI**
 
             ### Package Information
-            - **Version:** ${{ steps.current_version.outputs.current_version }}
+            - **Version:** ${version}
             - **Deployed from:** \`main\` branch
             - **Commit:** ${{ github.sha }}
 
             ### Links
-            - **PyPI Package:** https://pypi.org/project/ds-event-stream-python-sdk/${{ steps.current_version.outputs.current_version }}/
+            - **PyPI Package:** https://pypi.org/project/ds-event-stream-python-sdk/${version}/
             - **Documentation:** https://grasp-labs.github.io/ds-event-stream-py-sdk/
 
             ### Installation
             \`\`\`bash
-            pip install ds-event-stream-python-sdk==${{ steps.current_version.outputs.current_version }}
+            pip install ds-event-stream-python-sdk==${version}
             \`\`\``,
               draft: false,
               prerelease: false
-            });
+            };
+
+            // Only add tag_name if tag exists
+            if (tagExists) {
+              releaseData.tag_name = tagName;
+            }
+
+            const { data: release } = await github.rest.repos.createRelease(releaseData);
             console.log('Release created:', release.html_url);
