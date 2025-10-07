@@ -2,16 +2,6 @@ name: Deploy to PyPI
 
 on:
   workflow_dispatch:
-    inputs:
-      version_bump:
-        description: 'Version bump type'
-        required: true
-        default: 'patch'
-        type: choice
-        options:
-        - patch
-        - minor
-        - major
 
 permissions:
   contents: write
@@ -40,64 +30,14 @@ jobs:
         run: |
           CURRENT_VERSION=$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
           echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-          echo "Current version: $CURRENT_VERSION"
-
-      - name: Bump version
-        id: new_version
-        run: |
-          CURRENT_VERSION="${{ steps.current_version.outputs.current_version }}"
-          BUMP_TYPE="${{ github.event.inputs.version_bump }}"
-
-          echo "Bumping version: $CURRENT_VERSION ($BUMP_TYPE)"
-
-          # Parse current version
-          IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
-          MAJOR=${VERSION_PARTS[0]}
-          MINOR=${VERSION_PARTS[1]}
-          PATCH=${VERSION_PARTS[2]}
-
-          # Bump version based on type
-          case $BUMP_TYPE in
-            major)
-              MAJOR=$((MAJOR + 1))
-              MINOR=0
-              PATCH=0
-              ;;
-            minor)
-              MINOR=$((MINOR + 1))
-              PATCH=0
-              ;;
-            patch)
-              PATCH=$((PATCH + 1))
-              ;;
-          esac
-
-          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
-          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "Version bump: $CURRENT_VERSION -> $NEW_VERSION ($BUMP_TYPE)"
-
-          # Update pyproject.toml with new version
-          sed -i "s/version = \"[^\"]*\"/version = \"$NEW_VERSION\"/" pyproject.toml
-
-          # Verify the change
-          echo "Updated pyproject.toml:"
-          grep "version = " pyproject.toml
-
-      - name: Configure git
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Commit version bump
-        run: |
-          git add pyproject.toml
-          git commit -m "chore: bump version to ${{ steps.new_version.outputs.new_version }}"
-          git push origin main
+          echo "Deploying version: $CURRENT_VERSION"
 
       - name: Create and push tag
         run: |
-          git tag "v${{ steps.new_version.outputs.new_version }}"
-          git push origin "v${{ steps.new_version.outputs.new_version }}"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "v${{ steps.current_version.outputs.current_version }}"
+          git push origin "v${{ steps.current_version.outputs.current_version }}"
 
       - name: Build package
         run: |
@@ -117,29 +57,32 @@ jobs:
           verbose: true
 
       - name: Create GitHub Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/github-script@v7
         with:
-          tag_name: v${{ steps.new_version.outputs.new_version }}
-          release_name: Release v${{ steps.new_version.outputs.new_version }}
-          body: |
-            ## 🚀 Release v${{ steps.new_version.outputs.new_version }}
+          script: |
+            const { data: release } = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: 'v${{ steps.current_version.outputs.current_version }}',
+              name: 'Release v${{ steps.current_version.outputs.current_version }}',
+              body: `## 🚀 Release v${{ steps.current_version.outputs.current_version }}
 
             **Automated deployment to PyPI**
 
-            ### Version Bump
-            - **Previous version:** ${{ steps.current_version.outputs.current_version }}
-            - **New version:** ${{ steps.new_version.outputs.new_version }}
-            - **Bump type:** ${{ github.event.inputs.version_bump }}
+            ### Package Information
+            - **Version:** ${{ steps.current_version.outputs.current_version }}
+            - **Deployed from:** \`main\` branch
+            - **Commit:** ${{ github.sha }}
 
             ### Links
-            - **PyPI Package:** https://pypi.org/project/ds-event-stream-python-sdk/${{ steps.new_version.outputs.new_version }}/
+            - **PyPI Package:** https://pypi.org/project/ds-event-stream-python-sdk/${{ steps.current_version.outputs.current_version }}/
             - **Documentation:** https://grasp-labs.github.io/ds-event-stream-py-sdk/
 
             ### Installation
-            ```bash
-            pip install ds-event-stream-python-sdk==${{ steps.new_version.outputs.new_version }}
-            ```
-          draft: false
-          prerelease: false
+            \`\`\`bash
+            pip install ds-event-stream-python-sdk==${{ steps.current_version.outputs.current_version }}
+            \`\`\``,
+              draft: false,
+              prerelease: false
+            });
+            console.log('Release created:', release.html_url);
