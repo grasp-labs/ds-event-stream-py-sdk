@@ -12,14 +12,14 @@ from typing import Any, Dict, Optional
 class Event:
     id: str
     session_id: str
-    request_id: str
     tenant_id: str
     event_type: str
     event_source: str
-    metadata: Dict[str, str]
     timestamp: str
     created_by: str
     md5_hash: str
+    metadata: Optional[Dict[str, str]] = None
+    request_id: Optional[str] = None
     owner_id: Optional[str] = None
     event_source_uri: Optional[str] = None
     affected_entity_uri: Optional[str] = None
