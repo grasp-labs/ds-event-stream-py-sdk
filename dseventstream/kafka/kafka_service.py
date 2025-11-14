@@ -15,7 +15,23 @@ from dseventstream.kafka.kafka_config import KafkaConfig
 class KafkaProducerService:
     def __init__(self, config: KafkaConfig):
         self.config = config
-        self.producer = Producer(self.config.to_dict())
+        if not config.extra:
+            producer_config = self.config.to_dict()
+            producer_config.update({
+                "acks": "all",
+                "retries": "3",
+                "delivery.timeout.ms": "120000",
+                "request.timeout.ms": "30000",
+                "message.timeout.ms": "5000",
+                "compression.type": "snappy",
+                "batch.size": "16384",
+                "linger.ms": "5",
+                "max.in.flight.requests.per.connection": "5"
+            })
+        else:
+            producer_config = self.config.to_dict()
+
+        self.producer = Producer(producer_config)
 
     def send(self, topic: str, event: Event, key: Optional[str] = None):
         """
@@ -46,12 +62,26 @@ class KafkaConsumerService:
     def __init__(self, config: KafkaConfig, group_id: str):
         self.config = config
         self.group_id = group_id
-        consumer_config = self.config.to_dict()
-        consumer_config.update({
-            'group.id': self.group_id,
-            'auto.offset.reset': 'earliest',
-            'enable.auto.commit': True
-        })
+        if not self.config.extra:
+            consumer_config = self.config.to_dict()
+            consumer_config.update({
+                "session.timeout.ms": "6000",
+                "enable.partition.eof": "false",
+                "heartbeat.interval.ms": "3000",
+                "max.poll.interval.ms": "300000",
+                "auto.offset.reset": "earliest",
+                "enable.auto.commit": "false",
+                "fetch.min.bytes": "1",
+                "max.partition.fetch.bytes": "1048576"
+            })
+        else:
+            consumer_config = self.config.to_dict()
+            consumer_config.update({
+                'group.id': self.group_id,
+                'auto.offset.reset': 'earliest',
+                'enable.auto.commit': True
+            })
+        
         self.consumer = Consumer(consumer_config)
 
     def consume(self, topic: str, on_message: Callable[[Any], None]):
