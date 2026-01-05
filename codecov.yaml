@@ -1,0 +1,17 @@
+ignore:
+  - "tests/*"
+
+comment:
+  layout: "reach, diff, flags, files"
+
+coverage:
+  round: down
+
+health:
+  thresholds:
+    - targets: "*"
+      cover: 95
+      status: error
+    - targets: "*"
+      cover: 90
+      status: warning

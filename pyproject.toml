@@ -1,54 +1,80 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ds-event-stream-python-sdk"
-version = "0.1.1"
-description = "A modern Python SDK for Kafka event streaming (Grasp Labs)"
-readme = "README.md"
-requires-python = ">=3.11"
+name = "ds-event-stream-py-sdk"
+dynamic = ["version"]
+description = "A Python package from the DS library collection"
+dependencies = [
+    "confluent-kafka>=2.10.1",
+    "ds-common-logger-py-lib>=0.1.0-alpha.1,<1.0.0",
+]
+requires-python = ">=3.9"
 license = "Apache-2.0"
+license-files = ["LICENSE-APACHE"]
+keywords = ["ds", "kafka", "python"]
 authors = [
-    {name = "Grasp Labs", email = "hello@grasplabs.no"},
+    {name = "Kristoffer Varslott", email = "hello@grasplabs.com"}
 ]
 maintainers = [
-    {name = "Grasp Labs", email = "hello@grasplabs.no"},
+    {name = "Kristoffer Varslott", email = "hello@grasplabs.com"}
 ]
-keywords = ["kafka", "event-streaming", "sdk", "python", "grasp-labs"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
-    "Intended Audience :: Developers",
-
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Topic :: Software Development :: Libraries :: Python Modules",
-    "Topic :: System :: Distributed Computing",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Operating System :: OS Independent",
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-dependencies = [
-    "confluent-kafka>=2.0.0",
-]
+readme = "PyPI.md"
 
 [project.urls]
-Homepage = "https://github.com/grasp-labs/ds-event-stream-py-sdk"
 Documentation = "https://grasp-labs.github.io/ds-event-stream-py-sdk/"
-Repository = "https://github.com/grasp-labs/ds-event-stream-py-sdk.git"
-Issues = "https://github.com/grasp-labs/ds-event-stream-py-sdk/issues"
+Repository = "https://github.com/grasp-labs/ds-event-stream-py-sdk/"
+Issues = "https://github.com/grasp-labs/ds-event-stream-py-sdk/issues/"
 Changelog = "https://github.com/grasp-labs/ds-event-stream-py-sdk/releases"
 
 [project.optional-dependencies]
 dev = [
-    "datamodel-code-generator>=0.25.0",
-    "mkdocs>=1.5.0",
-    "mkdocs-material>=9.0.0",
-    "build>=0.10.0",
+    "ruff>=0.1.8",
+    "mypy>=1.7.0",
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-xdist>=3.3.0",
+    "pre-commit>=3.6.0",
+    "build>=1.0.0",
     "twine>=4.0.0",
+    "sphinx>=7.1.0",
+    "sphinx-autoapi>=3.0.0",
+    "sphinx-material>=0.0.35",
+]
+test = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-xdist>=3.3.0",
+]
+docs = [
+    "sphinx>=7.1.0",
+    "sphinx-autoapi>=3.0.0",
+    "sphinx-material>=0.0.35",
 ]
 
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+ds_event_stream_py_sdk = ["py.typed"]
+
+[tool.setuptools.dynamic]
+version = {file = "VERSION.txt"}
+
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["dseventstream*"]
-exclude = ["tests*"]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
