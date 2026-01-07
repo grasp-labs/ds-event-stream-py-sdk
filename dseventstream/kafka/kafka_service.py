@@ -17,10 +17,25 @@ class KafkaProducerService:
         self.config = config
         self.producer = Producer(self.config.to_dict())
 
+    def validate(self, event: Event) -> bool:
+        """
+        Validate that the event has required fields populated.
+        Returns True if valid, False otherwise.
+        """
+        if not event.event_source or event.event_source.strip() == "":
+            print(f"Validation failed: event_source is empty")
+            return False
+        return True
+
     def send(self, topic: str, event: Event, key: Optional[str] = None):
         """
         Send an event (should be a dataclass from models) to Kafka.
         """
+        # Validate event before sending
+        if not self.validate(event):
+            print(f"Event validation failed, not sending to topic {topic}")
+            return
+
         def delivery_report(err, msg):
             if err is not None:
                 print(f"Delivery failed for record {msg.key()}: {err}")
