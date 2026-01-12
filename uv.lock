@@ -516,7 +516,7 @@ wheels = [
 
 [[package]]
 name = "ds-event-stream-py-sdk"
-version = "0.2.1a1"
+version = "0.1.0a1"
 source = { editable = "." }
 dependencies = [
     { name = "confluent-kafka" },

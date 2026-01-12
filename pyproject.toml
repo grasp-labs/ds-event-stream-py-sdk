@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ds-event-stream-py-sdk"
-version = "0.2.1.alpha.1"
+version = "0.1.0.alpha.1"
 description = "A Python package from the DS library collection"
 dependencies = [
     "confluent-kafka>=2.10.1",
