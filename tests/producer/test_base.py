@@ -10,7 +10,7 @@ Smoke tests for the producer module (imports and basic API surface).
 from __future__ import annotations
 
 import importlib
-from typing import Any
+from typing import Any, cast
 from uuid import uuid4
 
 import pytest
@@ -67,6 +67,7 @@ class _FakeProducerClient:
         self.raise_on_produce = raise_on_produce
         self.produced: list[dict[str, Any]] = []
         self.flushed: list[float] = []
+        self.flush_remaining: int = 0
 
     def produce(self, **kwargs: Any) -> None:
         if self.raise_on_produce:
@@ -76,8 +77,9 @@ class _FakeProducerClient:
         if callback is not None:
             callback(None, _FakeMessage(topic=kwargs.get("topic", "events")))
 
-    def flush(self, timeout: float) -> None:
+    def flush(self, timeout: float) -> int:
         self.flushed.append(timeout)
+        return self.flush_remaining
 
 
 def test_producer_init_sets_plaintext_security_protocol(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -134,6 +136,7 @@ def test_send_message_produces_and_flushes(monkeypatch: pytest.MonkeyPatch) -> N
     """
 
     client = _FakeProducerClient({})
+    client.flush_remaining = 0
     monkeypatch.setattr(producer_base, "Producer", lambda _config: client)
 
     producer = producer_base.KafkaProducer()
@@ -182,6 +185,38 @@ def test_send_message_wraps_unknown_errors_in_producer_error(
         producer.send_message(topic="events", message=event)
 
 
+def test_send_message_raises_producer_error_when_flush_times_out(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """
+    Verify non-zero flush return value raises ``ProducerError``.
+
+    Returns:
+        None.
+    """
+
+    client = _FakeProducerClient({})
+    client.flush_remaining = 1
+    monkeypatch.setattr(producer_base, "Producer", lambda _config: client)
+
+    producer = producer_base.KafkaProducer()
+    event = EventStream(
+        session_id=uuid4(),
+        tenant_id=uuid4(),
+        event_type="test.event",
+        event_source="unit-test",
+        created_by="pytest",
+    )
+
+    with pytest.raises(ProducerError) as exc_info:
+        producer.send_message(topic="events", message=event, key="k1", timeout=5.0)
+
+    assert exc_info.value.details["topic"] == "events"
+    assert exc_info.value.details["key"] == "k1"
+    assert exc_info.value.details["timeout"] == 5.0
+    assert exc_info.value.details["undelivered_messages"] == 1
+
+
 def test_send_message_reraises_serialization_error(monkeypatch: pytest.MonkeyPatch) -> None:
     """
     Verify ``SerializationError`` is not wrapped.
@@ -191,6 +226,7 @@ def test_send_message_reraises_serialization_error(monkeypatch: pytest.MonkeyPat
     """
 
     client = _FakeProducerClient({})
+    client.flush_remaining = 0
     monkeypatch.setattr(producer_base, "Producer", lambda _config: client)
 
     producer = producer_base.KafkaProducer()
@@ -221,11 +257,12 @@ def test_callback_paths_do_not_raise(monkeypatch: pytest.MonkeyPatch) -> None:
     """
 
     client = _FakeProducerClient({})
+    client.flush_remaining = 0
     monkeypatch.setattr(producer_base, "Producer", lambda _config: client)
 
     producer = producer_base.KafkaProducer()
-    producer._callback(RuntimeError("x"), _FakeMessage(topic="events"))
-    producer._callback(None, _FakeMessage(topic="events"))
+    producer._callback(cast("Any", RuntimeError("x")), cast("Any", _FakeMessage(topic="events")))
+    producer._callback(None, cast("Any", _FakeMessage(topic="events")))
 
 
 def test_close_flushes(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -237,6 +274,7 @@ def test_close_flushes(monkeypatch: pytest.MonkeyPatch) -> None:
     """
 
     client = _FakeProducerClient({})
+    client.flush_remaining = 0
     monkeypatch.setattr(producer_base, "Producer", lambda _config: client)
 
     producer = producer_base.KafkaProducer()

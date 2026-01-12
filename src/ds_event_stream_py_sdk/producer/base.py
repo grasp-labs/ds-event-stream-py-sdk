@@ -23,16 +23,14 @@ from collections.abc import Callable
 from typing import Any
 
 from confluent_kafka import KafkaError, Message, Producer
-from ds_common_logger_py_lib import Logger
+from ds_common_logger_py_lib import LoggingMixin
 from ds_common_serde_py_lib.errors import SerializationError
 
 from ..errors import ProducerError
 from ..models.v1 import EventStream
 
-logger = Logger.get_logger(__name__)
 
-
-class KafkaProducer:
+class KafkaProducer(LoggingMixin):
     """Base Kafka producer for sending pipeline events."""
 
     def __init__(
@@ -43,6 +41,7 @@ class KafkaProducer:
         sasl_username: str | None = None,
         sasl_password: str | None = None,
         ssl_ca_location: str = "/etc/ssl/certs/ca-certificates.crt",
+        timeout: float = 60.0,
         **kwargs: Any,
     ) -> None:
         """
@@ -54,10 +53,12 @@ class KafkaProducer:
             sasl_username: SASL username.
             sasl_password: SASL password.
             ssl_ca_location: Location of the SSL CA certificate.
+            timeout: Timeout for producer flush.
             kwargs: Additional keyword arguments passed to the underlying producer.
         """
         self.bootstrap_servers = bootstrap_servers
         self.client_id = client_id
+        self.timeout = timeout
 
         # Producer configuration
         self.config: dict[str, Any] = {
@@ -91,6 +92,7 @@ class KafkaProducer:
         message: EventStream,
         key: str | None = None,
         callback: Callable[[KafkaError | None, Message], None] | None = None,
+        timeout: float = 60.0,
     ) -> None:
         """
         Send a message to a topic.
@@ -104,11 +106,11 @@ class KafkaProducer:
             message: Message data to send.
             key: Optional message key.
             callback: Optional callback function invoked on delivery.
+            timeout: Timeout for producer flush.
         """
         try:
             message_bytes = json.dumps(message.serialize()).encode("utf-8")
             key_bytes = key.encode("utf-8") if key else None
-
             self.producer.produce(
                 topic=topic,
                 value=message_bytes,
@@ -116,11 +118,32 @@ class KafkaProducer:
                 callback=callback or self._callback,
             )
 
-            self.producer.flush(timeout=60.0)
+            flush_timeout = timeout or self.timeout
+            remaining = self.producer.flush(timeout=flush_timeout)
 
-            logger.debug("Kafka message sent", extra={"topic": topic, "key": key})
+            if remaining != 0:
+                self.log.error(
+                    "Kafka message delivery timed out",
+                    extra={
+                        "topic": topic,
+                        "key": key,
+                        "timeout": flush_timeout,
+                        "undelivered_messages": remaining,
+                    },
+                )
+                raise ProducerError(
+                    message="Kafka message delivery timed out",
+                    details={
+                        "topic": topic,
+                        "key": key,
+                        "timeout": flush_timeout,
+                        "undelivered_messages": remaining,
+                    },
+                )
+
+            self.log.info("Kafka message delivered", extra={"topic": topic, "key": key})
         except SerializationError as exc:
-            logger.error(
+            self.log.error(
                 "Failed to serialize message",
                 extra={
                     "topic": topic,
@@ -133,8 +156,10 @@ class KafkaProducer:
                 },
             )
             raise exc
+        except ProducerError as exc:
+            raise exc
         except Exception as exc:
-            logger.error(
+            self.log.error(
                 "Failed to send kafka message",
                 extra={
                     "topic": topic,
@@ -174,9 +199,9 @@ class KafkaProducer:
                     "offset": msg.offset(),
                 }
             )
-            logger.error("Message delivery failed", extra=extra)
+            self.log.error("Message delivery failed", extra=extra)
         else:
-            logger.debug(
+            self.log.info(
                 "Message delivered",
                 extra={
                     "topic": msg.topic(),
@@ -192,5 +217,5 @@ class KafkaProducer:
         Returns:
             None
         """
-        self.producer.flush(timeout=60.0)
-        logger.debug("Producer closed")
+        self.producer.flush(timeout=self.timeout)
+        self.log.info("Producer closed")
