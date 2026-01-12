@@ -15,18 +15,21 @@ Example
 .. code-block:: python
 
     uv run python examples/02_consumer.py
+
 """
 
 from __future__ import annotations
+import logging
 
 from ds_event_stream_py_sdk.consumer import KafkaConsumer
 from ds_event_stream_py_sdk.models.v1 import EventStream
 from ds_common_logger_py_lib import Logger
 
+Logger(level=logging.DEBUG)
 logger = Logger.get_logger(__name__)
 
 
-def handle_event(event: EventStream) -> None:
+def handle_event(event: EventStream, consumer: KafkaConsumer) -> None:
     """
     Handle a received event.
 
@@ -38,6 +41,7 @@ def handle_event(event: EventStream) -> None:
     """
 
     logger.info(f"received event_type={event.event_type} id={event.id}")
+    consumer.commit_message()
 
 
 def main() -> None:
@@ -49,14 +53,14 @@ def main() -> None:
     """
 
     consumer = KafkaConsumer(
-        bootstrap_servers="localhost:9092",
+        bootstrap_servers="b0.dev.kafka.ds.local:9095",
+        sasl_username="ds.test.consumer.v1",
+        sasl_password="",
+        topics=["ds.test.message.created.v1"],
         enable_auto_commit=False,
     )
 
-    consumer.add_message_handler("test.events", handle_event)
-
-    logger.info("Consumer configured.")
-    logger.info("To start consuming, uncomment the line below.")
+    consumer.add_message_handler("ds.test.message.created.v1", handle_event, consumer)
     consumer.start()
 
 

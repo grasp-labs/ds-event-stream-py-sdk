@@ -37,13 +37,13 @@ class KafkaConsumer(LoggingMixin):
 
     def __init__(
         self,
-        bootstrap_servers: str = "localhost:9092",
+        topics: list[str],
+        bootstrap_servers: str,
         client_id: str = "ds.event.stream.consumer",
         group_id: str = "ds.event.stream.consumer",
         auto_offset_reset: str = "earliest",
         enable_auto_commit: bool = False,
         session_timeout_ms: int = 45000,
-        topics: list[str] | None = None,
         sasl_username: str | None = None,
         sasl_password: str | None = None,
         ssl_ca_location: str = "/etc/ssl/certs/ca-certificates.crt",
@@ -53,13 +53,13 @@ class KafkaConsumer(LoggingMixin):
         Initialize the Kafka consumer.
 
         Args:
+            topics: List of topics to subscribe to.
             bootstrap_servers: Kafka broker addresses.
             client_id: Consumer client ID.
             group_id: Consumer group ID.
             auto_offset_reset: Offset reset policy.
             enable_auto_commit: Whether to auto-commit offsets.
             session_timeout_ms: Session timeout in milliseconds.
-            topics: List of topics to subscribe to.
             sasl_username: SASL username.
             sasl_password: SASL password.
             ssl_ca_location: Location of the SSL CA certificate.

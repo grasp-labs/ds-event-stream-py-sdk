@@ -35,7 +35,7 @@ class KafkaProducer(LoggingMixin):
 
     def __init__(
         self,
-        bootstrap_servers: str = "localhost:9092",
+        bootstrap_servers: str,
         client_id: str = "ds.event.stream.producer",
         # SASL_SSL Authentication (required for production)
         sasl_username: str | None = None,

@@ -16,11 +16,6 @@ Example
 
     uv run python examples/03_producer.py
 
-To send to a real broker:
-
-.. code-block:: python
-
-    uv run python examples/03_producer.py --send --bootstrap-servers localhost:9092 --topic events
 """
 
 from __future__ import annotations
@@ -44,7 +39,12 @@ def main() -> None:
     Returns:
         None.
     """
-    producer = KafkaProducer(bootstrap_servers="localhost:9092")
+    producer = KafkaProducer(
+        bootstrap_servers="b0.dev.kafka.ds.local:9095",
+        sasl_username="ds.test.producer.v1",
+        sasl_password="",
+        timeout=5.0,
+    )
 
     event = EventStream(
         session_id=uuid4(),
@@ -54,13 +54,9 @@ def main() -> None:
         created_by="examples/03_producer.py",
         payload={"hello": "world"},
     )
-
-    logger.info("Producer configured.")
-    logger.info("Sending message (this will block if broker is unreachable).")
-
     try:
         producer.send_message(
-            topic="events",
+            topic="ds.test.message.created.v1",
             message=event,
             key=str(event.session_id),
             timeout=5.0,
