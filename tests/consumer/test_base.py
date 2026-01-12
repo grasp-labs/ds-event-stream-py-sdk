@@ -22,6 +22,8 @@ from ds_event_stream_py_sdk.consumer.base import KafkaConsumer
 from ds_event_stream_py_sdk.errors import ConsumerError
 from ds_event_stream_py_sdk.models.v1 import EventStream
 
+BOOTSTRAP_SERVERS = "localhost:9092"
+
 
 def test_consumer_base_module_imports() -> None:
     """
@@ -102,7 +104,7 @@ def test_add_message_handler_registers_for_str_and_invokes_handler() -> None:
         None.
     """
 
-    consumer = KafkaConsumer(topics=["events"])
+    consumer = KafkaConsumer(bootstrap_servers=BOOTSTRAP_SERVERS, topics=["events"])
     called: dict[str, Any] = {"count": 0, "arg": None}
 
     def handler(message: EventStream, arg: str) -> None:
@@ -133,7 +135,7 @@ def test_add_message_handler_registers_for_list_of_topics() -> None:
         None.
     """
 
-    consumer = KafkaConsumer(topics=["a", "b"])
+    consumer = KafkaConsumer(bootstrap_servers=BOOTSTRAP_SERVERS, topics=["a", "b"])
 
     def handler(_: EventStream) -> None:
         return None
@@ -151,7 +153,7 @@ def test_commit_message_noops_without_current_message_or_client() -> None:
         None.
     """
 
-    consumer = KafkaConsumer(topics=["events"])
+    consumer = KafkaConsumer(bootstrap_servers=BOOTSTRAP_SERVERS, topics=["events"])
     consumer.commit_message()
 
 
@@ -163,7 +165,7 @@ def test_commit_message_raises_consumer_error_on_commit_failure() -> None:
         None.
     """
 
-    consumer = KafkaConsumer(topics=["events"])
+    consumer = KafkaConsumer(bootstrap_servers=BOOTSTRAP_SERVERS, topics=["events"])
     consumer.consumer = _FakeConsumerClient(commit_raises=True)  # type: ignore[assignment]
     consumer.current_message = _FakeMessage(topic="events", partition=1, offset=2)  # type: ignore[assignment]
 
@@ -183,7 +185,7 @@ def test_process_message_calls_handler_for_topic() -> None:
         None.
     """
 
-    consumer = KafkaConsumer(topics=["events"])
+    consumer = KafkaConsumer(bootstrap_servers=BOOTSTRAP_SERVERS, topics=["events"])
     called: dict[str, int] = {"count": 0}
 
     def handler(_: EventStream) -> None:
@@ -216,7 +218,7 @@ def test_process_message_raises_deserialization_error_on_none_value() -> None:
         None.
     """
 
-    consumer = KafkaConsumer(topics=["events"])
+    consumer = KafkaConsumer(bootstrap_servers=BOOTSTRAP_SERVERS, topics=["events"])
     msg = _FakeMessage(topic="events", value=None)
 
     with pytest.raises(DeserializationError):
@@ -231,7 +233,7 @@ def test_process_message_raises_consumer_error_on_invalid_json() -> None:
         None.
     """
 
-    consumer = KafkaConsumer(topics=["events"])
+    consumer = KafkaConsumer(bootstrap_servers=BOOTSTRAP_SERVERS, topics=["events"])
     msg = _FakeMessage(topic="events", partition=3, offset=4, value=b"{")
 
     with pytest.raises(ConsumerError) as exc_info:
@@ -250,7 +252,7 @@ def test_stop_closes_consumer_client() -> None:
         None.
     """
 
-    consumer = KafkaConsumer(topics=["events"])
+    consumer = KafkaConsumer(bootstrap_servers=BOOTSTRAP_SERVERS, topics=["events"])
     client = _FakeConsumerClient()
     consumer.consumer = client  # type: ignore[assignment]
 
@@ -270,7 +272,7 @@ def test_on_assign_and_on_revoke_do_not_raise() -> None:
         def memberid(self) -> str:
             return "member-1"
 
-    consumer = KafkaConsumer(topics=["events"])
+    consumer = KafkaConsumer(bootstrap_servers=BOOTSTRAP_SERVERS, topics=["events"])
     consumer._on_assign(_FakeKafkaConsumer(), partitions=[1])
     consumer._on_revoke(_FakeKafkaConsumer(), partitions=[1])
 
@@ -283,7 +285,7 @@ def test_start_subscribes_polls_and_closes(monkeypatch: pytest.MonkeyPatch) -> N
         None.
     """
 
-    consumer = KafkaConsumer(topics=["events"])
+    consumer = KafkaConsumer(bootstrap_servers=BOOTSTRAP_SERVERS, topics=["events"])
 
     class _FakeKafkaClient:
         def __init__(self, _config: dict[str, Any]) -> None:
@@ -321,6 +323,7 @@ def test_consumer_init_sets_sasl_plaintext_when_credentials_provided() -> None:
     """
 
     consumer = KafkaConsumer(
+        bootstrap_servers=BOOTSTRAP_SERVERS,
         topics=["events"],
         sasl_username="u",
         sasl_password="p",
@@ -339,7 +342,7 @@ def test_commit_message_success_calls_commit() -> None:
         None.
     """
 
-    consumer = KafkaConsumer(topics=["events"])
+    consumer = KafkaConsumer(bootstrap_servers=BOOTSTRAP_SERVERS, topics=["events"])
     client = _FakeConsumerClient()
     consumer.consumer = client  # type: ignore[assignment]
     consumer.current_message = _FakeMessage(topic="events", partition=1, offset=2)  # type: ignore[assignment]
@@ -356,7 +359,7 @@ def test_process_message_without_handler_does_not_raise() -> None:
         None.
     """
 
-    consumer = KafkaConsumer(topics=["events"])
+    consumer = KafkaConsumer(bootstrap_servers=BOOTSTRAP_SERVERS, topics=["events"])
     event = EventStream(
         session_id=uuid4(),
         tenant_id=uuid4(),
@@ -380,7 +383,7 @@ def test_process_message_reraises_consumer_error_from_handler() -> None:
         None.
     """
 
-    consumer = KafkaConsumer(topics=["events"])
+    consumer = KafkaConsumer(bootstrap_servers=BOOTSTRAP_SERVERS, topics=["events"])
 
     def handler(_: EventStream) -> None:
         raise ConsumerError(details={"reason": "handler failed"})
@@ -411,7 +414,7 @@ def test_stop_noops_without_client() -> None:
         None.
     """
 
-    consumer = KafkaConsumer(topics=["events"])
+    consumer = KafkaConsumer(bootstrap_servers=BOOTSTRAP_SERVERS, topics=["events"])
     consumer.stop()
 
 
@@ -423,7 +426,7 @@ def test_start_exits_after_polling_none(monkeypatch: pytest.MonkeyPatch) -> None
         None.
     """
 
-    consumer = KafkaConsumer(topics=["events"])
+    consumer = KafkaConsumer(bootstrap_servers=BOOTSTRAP_SERVERS, topics=["events"])
 
     class _FakeKafkaClient:
         def __init__(self, _config: dict[str, Any]) -> None:
@@ -459,7 +462,7 @@ def test_start_handles_message_error_branch(monkeypatch: pytest.MonkeyPatch) -> 
         None.
     """
 
-    consumer = KafkaConsumer(topics=["events"])
+    consumer = KafkaConsumer(bootstrap_servers=BOOTSTRAP_SERVERS, topics=["events"])
 
     class _FakeKafkaError:
         def __init__(self, code: int) -> None:
@@ -506,7 +509,7 @@ def test_start_catches_exception_in_process_message(monkeypatch: pytest.MonkeyPa
         None.
     """
 
-    consumer = KafkaConsumer(topics=["events"])
+    consumer = KafkaConsumer(bootstrap_servers=BOOTSTRAP_SERVERS, topics=["events"])
 
     class _FakeKafkaClient:
         def __init__(self, _config: dict[str, Any]) -> None:

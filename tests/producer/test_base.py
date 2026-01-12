@@ -20,6 +20,8 @@ import ds_event_stream_py_sdk.producer.base as producer_base
 from ds_event_stream_py_sdk.errors import ProducerError
 from ds_event_stream_py_sdk.models.v1 import EventStream
 
+BOOTSTRAP_SERVERS = "localhost:9092"
+
 
 def test_producer_base_module_imports() -> None:
     """
@@ -98,7 +100,7 @@ def test_producer_init_sets_plaintext_security_protocol(monkeypatch: pytest.Monk
 
     monkeypatch.setattr(producer_base, "Producer", _factory)
 
-    producer = producer_base.KafkaProducer()
+    producer = producer_base.KafkaProducer(bootstrap_servers=BOOTSTRAP_SERVERS)
     assert producer.config["security.protocol"] == "PLAINTEXT"
     assert created["client"].config["security.protocol"] == "PLAINTEXT"
 
@@ -121,7 +123,11 @@ def test_producer_init_sets_sasl_plaintext_when_credentials_provided(
 
     monkeypatch.setattr(producer_base, "Producer", _factory)
 
-    producer = producer_base.KafkaProducer(sasl_username="u", sasl_password="p")
+    producer = producer_base.KafkaProducer(
+        bootstrap_servers=BOOTSTRAP_SERVERS,
+        sasl_username="u",
+        sasl_password="p",
+    )
     assert producer.config["security.protocol"] == "SASL_PLAINTEXT"
     assert producer.config["sasl.username"] == "u"
     assert producer.config["sasl.password"] == "p"
@@ -139,7 +145,7 @@ def test_send_message_produces_and_flushes(monkeypatch: pytest.MonkeyPatch) -> N
     client.flush_remaining = 0
     monkeypatch.setattr(producer_base, "Producer", lambda _config: client)
 
-    producer = producer_base.KafkaProducer()
+    producer = producer_base.KafkaProducer(bootstrap_servers=BOOTSTRAP_SERVERS)
     event = EventStream(
         session_id=uuid4(),
         tenant_id=uuid4(),
@@ -172,7 +178,7 @@ def test_send_message_wraps_unknown_errors_in_producer_error(
     client = _FakeProducerClient({}, raise_on_produce=True)
     monkeypatch.setattr(producer_base, "Producer", lambda _config: client)
 
-    producer = producer_base.KafkaProducer()
+    producer = producer_base.KafkaProducer(bootstrap_servers=BOOTSTRAP_SERVERS)
     event = EventStream(
         session_id=uuid4(),
         tenant_id=uuid4(),
@@ -199,7 +205,7 @@ def test_send_message_raises_producer_error_when_flush_times_out(
     client.flush_remaining = 1
     monkeypatch.setattr(producer_base, "Producer", lambda _config: client)
 
-    producer = producer_base.KafkaProducer()
+    producer = producer_base.KafkaProducer(bootstrap_servers=BOOTSTRAP_SERVERS)
     event = EventStream(
         session_id=uuid4(),
         tenant_id=uuid4(),
@@ -229,7 +235,7 @@ def test_send_message_reraises_serialization_error(monkeypatch: pytest.MonkeyPat
     client.flush_remaining = 0
     monkeypatch.setattr(producer_base, "Producer", lambda _config: client)
 
-    producer = producer_base.KafkaProducer()
+    producer = producer_base.KafkaProducer(bootstrap_servers=BOOTSTRAP_SERVERS)
 
     event = EventStream(
         session_id=uuid4(),
@@ -260,7 +266,7 @@ def test_callback_paths_do_not_raise(monkeypatch: pytest.MonkeyPatch) -> None:
     client.flush_remaining = 0
     monkeypatch.setattr(producer_base, "Producer", lambda _config: client)
 
-    producer = producer_base.KafkaProducer()
+    producer = producer_base.KafkaProducer(bootstrap_servers=BOOTSTRAP_SERVERS)
     producer._callback(cast("Any", RuntimeError("x")), cast("Any", _FakeMessage(topic="events")))
     producer._callback(None, cast("Any", _FakeMessage(topic="events")))
 
@@ -277,7 +283,7 @@ def test_close_flushes(monkeypatch: pytest.MonkeyPatch) -> None:
     client.flush_remaining = 0
     monkeypatch.setattr(producer_base, "Producer", lambda _config: client)
 
-    producer = producer_base.KafkaProducer()
+    producer = producer_base.KafkaProducer(bootstrap_servers=BOOTSTRAP_SERVERS)
     producer.close()
 
     assert client.flushed and client.flushed[-1] == 60.0
