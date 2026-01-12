@@ -4,5 +4,5 @@
 
 Description
 -----------
-Test package for the ``ds_event_stream_py_sdk`` module.
+Tests for ``ds_event_stream_py_sdk.models``.
 """

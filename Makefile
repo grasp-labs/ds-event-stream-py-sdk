@@ -87,13 +87,16 @@ docs: ## Build Sphinx documentation
 
 # ===== Versioning =====
 
+PYPROJECT_VERSION := $(shell python -c "import pathlib,re; t=pathlib.Path('pyproject.toml').read_text(encoding='utf-8'); m=re.search(r'(?ms)^\\[project\\]\\s.*?^version\\s*=\\s*\"([^\"]+)\"', t); print(m.group(1) if m else '')")
+
 .PHONY: version
 version: ## Show current version
-	@cat VERSION.txt
+	@echo "$(PYPROJECT_VERSION)"
 
 .PHONY: tag
-tag: ## Tag the current version and push to origin (publishes a new release)
-	git tag -a v$$(cat VERSION.txt) -m "Version $$(cat VERSION.txt)"
-	git push origin v$$(cat VERSION.txt)
+tag: ## Tag the current version from pyproject.toml and push to origin (triggers release)
+	@test -n "$(PYPROJECT_VERSION)" || (echo "❌ Could not read version from pyproject.toml" && exit 1)
+	@git tag -a "v$(PYPROJECT_VERSION)" -m "Version v$(PYPROJECT_VERSION)"
+	@git push origin "v$(PYPROJECT_VERSION)"
 
 # ===== End of Makefile =====

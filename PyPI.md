@@ -44,8 +44,10 @@ import ds_event_stream_py_sdk
 
 ## Requirements
 
-- Python 3.9 or higher
-- <!-- List any required dependencies -->
+- Python 3.10 or higher
+- ds-common-logger-py-lib
+- ds-common-serde-py-lib
+- confluent-kafka
 
 ## Optional Dependencies
 

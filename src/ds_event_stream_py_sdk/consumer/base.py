@@ -207,7 +207,8 @@ class KafkaConsumer:
                         continue
 
                     if msg.error():
-                        if msg.error().code() == KafkaError._PARTITION_EOF:
+                        err = msg.error()
+                        if err is not None and err.code() == KafkaError._PARTITION_EOF:
                             logger.debug(
                                 "Reached end of partition",
                                 extra={
@@ -224,8 +225,8 @@ class KafkaConsumer:
                                     "offset": msg.offset(),
                                     "error": {
                                         "code": "DS_KAFKA_CONSUMER_ERROR",
-                                        "type": type(msg.error()).__name__,
-                                        "message": str(msg.error()),
+                                        "type": type(err).__name__ if err is not None else "KafkaError",
+                                        "message": str(err) if err is not None else "",
                                         "traceback": traceback.format_exc(),
                                     },
                                 },
@@ -279,7 +280,7 @@ class KafkaConsumer:
         try:
             raw_value = msg.value()
             if raw_value is None:
-                raise DeserializationError(  # TODO: Import ds-common-serde-py-lib.errors.SerializationError
+                raise DeserializationError(
                     message="Message value was None",
                     details={
                         "topic": msg.topic(),
@@ -290,7 +291,7 @@ class KafkaConsumer:
                 )
 
             data = json.loads(raw_value.decode("utf-8"))
-            message = EventStream.deserialize(data)  # TODO: Import ds-common-serde-py-lib.
+            message = EventStream.deserialize(data)
             topic = msg.topic()
 
             logger.debug(
@@ -306,7 +307,7 @@ class KafkaConsumer:
                 self.message_handlers[topic](message)
             else:
                 logger.warning("No handler found for topic", extra={"topic": topic})
-        except DeserializationError as exc:  # TODO: Import ds-common-serde-py-lib.errors.DeserializationError
+        except DeserializationError as exc:
             logger.error(
                 "Failed to deserialize message",
                 extra={

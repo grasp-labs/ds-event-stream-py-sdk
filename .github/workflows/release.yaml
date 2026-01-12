@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
 
 jobs:
   build:
@@ -12,8 +18,6 @@ jobs:
   publish:
     needs: build
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -22,11 +26,13 @@ jobs:
         run: |
           # Tag name is available as github.ref_name, e.g. v1.2.3
           TAG_VERSION="${GITHUB_REF_NAME#v}"
-          FILE_VERSION=$(cat VERSION.txt | tr -d '\n')
+          FILE_VERSION="$(
+            python -c "import pathlib, tomllib; pyproject = tomllib.loads(pathlib.Path('pyproject.toml').read_text(encoding='utf-8')); print(pyproject['project']['version'])"
+          )"
           echo "Tag version: $TAG_VERSION"
           echo "File version: $FILE_VERSION"
           if [ "$TAG_VERSION" != "$FILE_VERSION" ]; then
-            echo "❌ VERSION.txt ($FILE_VERSION) does not match tag ($TAG_VERSION)"
+            echo "❌ pyproject.toml version ($FILE_VERSION) does not match tag ($TAG_VERSION)"
             exit 1
           fi
           echo "✅ Version verification passed"
@@ -69,3 +75,51 @@ jobs:
           generate_release_notes: true
           draft: false
           prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
+
+  dynamodb-push:
+    needs: [github-release]
+    runs-on: ubuntu-latest
+
+    env:
+      DOMAIN: ds
+      AWS_REGION: eu-north-1
+      SERVICE_GROUP: packages
+      SERVICE_NAME: "ds-event-stream-py-sdk"
+      TABLE_NAME: ds-coordination-release-fragments-prod
+
+    steps:
+    - name: Configure AWS CLI
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Extract Metadata
+      id: meta
+      run: |
+        echo "VERSION=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+        echo "COMMIT_SHA=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+        echo "TIMESTAMP=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_OUTPUT"
+        echo "ARTIFACT_URL=https://github.com/${GITHUB_REPOSITORY}/releases/tag/${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+
+    - name: Push Release Fragment to DynamoDB
+      run: |
+        aws dynamodb put-item \
+          --table-name ${{ env.TABLE_NAME }} \
+          --item '{
+            "PK": {"S": "${{ steps.meta.outputs.VERSION }}"},
+            "SK": {"S": "${{ env.DOMAIN }}#${{ env.SERVICE_GROUP }}#${{ env.SERVICE_NAME }}"},
+            "GSI1PK": {"S": "service#${{ env.SERVICE_NAME }}"},
+            "GSI1SK": {"S": "${{ steps.meta.outputs.VERSION }}"},
+            "GSI2PK": {"S": "latest#${{ env.DOMAIN }}#${{ env.SERVICE_GROUP }}"},
+            "GSI2SK": {"S": "${{ env.SERVICE_NAME }}"},
+            "domain": {"S": "${{ env.DOMAIN }}"},
+            "serviceGroup": {"S": "${{ env.SERVICE_GROUP }}"},
+            "serviceName": {"S": "${{ env.SERVICE_NAME }}"},
+            "version": {"S": "${{ steps.meta.outputs.VERSION }}"},
+            "commit": {"S": "${{ steps.meta.outputs.COMMIT_SHA }}"},
+            "artifact": {"S": "${{ steps.meta.outputs.ARTIFACT_URL }}"},
+            "timestamp": {"S": "${{ steps.meta.outputs.TIMESTAMP }}"}
+          }' \
+          --region $AWS_REGION

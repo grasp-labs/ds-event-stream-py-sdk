@@ -14,8 +14,9 @@ import traceback
 from collections.abc import Callable
 from typing import Any
 
-from confluent_kafka import Message, Producer
+from confluent_kafka import KafkaError, Message, Producer
 from ds_common_logger_py_lib import Logger
+from ds_common_serde_py_lib.errors import SerializationError
 
 from ..errors import ProducerError
 from ..models.v1 import EventStream
@@ -81,7 +82,7 @@ class KafkaProducer:
         topic: str,
         message: EventStream,
         key: str | None = None,
-        callback: Callable[[Exception | None, Message | None], None] | None = None,
+        callback: Callable[[KafkaError | None, Message], None] | None = None,
     ) -> None:
         """
         Send a message to a topic.
@@ -110,7 +111,20 @@ class KafkaProducer:
             self.producer.flush(timeout=60.0)
 
             logger.debug("Kafka message sent", extra={"topic": topic, "key": key})
-
+        except SerializationError as exc:
+            logger.error(
+                "Failed to serialize message",
+                extra={
+                    "topic": topic,
+                    "error": {
+                        "code": "DS_KAFKA_PRODUCER_ERROR",
+                        "type": type(exc).__name__,
+                        "message": str(exc),
+                        "traceback": traceback.format_exc(),
+                    },
+                },
+            )
+            raise exc
         except Exception as exc:
             logger.error(
                 "Failed to send kafka message",
@@ -128,16 +142,16 @@ class KafkaProducer:
                 details={"topic": topic},
             ) from exc
 
-    def _callback(self, err: Exception | None, msg: Message | None) -> None:
+    def _callback(self, err: KafkaError | None, msg: Message) -> None:
         """
         Callback for message delivery reports.
 
         Args:
             err: Error object.
-            msg: Message object (may be None if delivery failed before assignment).
+            msg: Message object.
         """
         if err is not None:
-            extra = {
+            extra: dict[str, Any] = {
                 "error": {
                     "code": "DS_KAFKA_PRODUCER_ERROR",
                     "type": type(err).__name__,
@@ -145,16 +159,15 @@ class KafkaProducer:
                     "traceback": traceback.format_exc(),
                 },
             }
-            if msg is not None:
-                extra.update(
-                    {
-                        "topic": msg.topic(),
-                        "partition": msg.partition(),
-                        "offset": msg.offset(),
-                    }
-                )
+            extra.update(
+                {
+                    "topic": msg.topic(),
+                    "partition": msg.partition(),
+                    "offset": msg.offset(),
+                }
+            )
             logger.error("Message delivery failed", extra=extra)
-        elif msg is not None:
+        else:
             logger.debug(
                 "Message delivered",
                 extra={

@@ -1,6 +1,6 @@
 # ds-event-stream-py-sdk
 
-![Python Versions](https://img.shields.io/badge/python-3.9%20|%203.10%20|%203.11%20|%203.12-blue)
+![Python Versions](https://img.shields.io/badge/python-3.10%20|%203.11%20|%203.12%20|%203.13-blue)
 [![PyPI version](https://badge.fury.io/py/ds-event-stream-py-sdk.svg?kill_cache=1)](https://badge.fury.io/py/ds-event-stream-py-sdk)
 [![Build Status](https://github.com/grasp-labs/ds-event-stream-py-sdk/actions/workflows/build.yaml/badge.svg)](https://github.com/grasp-labs/ds-event-stream-py-sdk/actions/workflows/build.yaml)
 [![codecov](https://codecov.io/gh/grasp-labs/ds-event-stream-py-sdk/graph/badge.svg?token=EO3YCNCZFS)](https://codecov.io/gh/grasp-labs/ds-event-stream-py-sdk)
@@ -62,8 +62,8 @@ make tag           # Create git tag and push (triggers release)
 
 > **⚠️ Warning**: The `make tag` command will create a git tag and
 > push it to the remote repository, which may trigger automated
-> releases. Ensure you have updated `VERSION.txt` and committed all
-> changes before running this command.
+> releases. Ensure you have updated `pyproject.toml` with the new version
+> and committed all changes before running this command.
 
 ### Pre-commit Hooks
 
