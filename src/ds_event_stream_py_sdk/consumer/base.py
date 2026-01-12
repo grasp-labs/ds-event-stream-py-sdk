@@ -1,13 +1,22 @@
 """
-File: base.py
-Description: Base Kafka consumer implementation.
-Region: packages/shared
+**File:** ``base.py``
+**Region:** ``ds-event-stream-py-sdk``
 
-# Example:
-#
-# consumer = KafkaConsumer(bootstrap_servers="localhost:9092", topics=["events"])
-# consumer.add_message_handler("events", lambda event: print(event.event_type))
-# consumer.start()
+Description
+-----------
+Base Kafka consumer implementation for processing DS event stream events.
+
+Example
+-------
+
+.. code-block:: python
+
+    from ds_event_stream_py_sdk.consumer import KafkaConsumer
+
+    consumer = KafkaConsumer(
+        bootstrap_servers="localhost:9092",
+        topics=["events"],
+    )
 """
 
 import json

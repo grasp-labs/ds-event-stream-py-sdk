@@ -1,10 +1,13 @@
 """
-A Python package from the ds-common library collection.
-
 **File:** ``__init__.py``
 **Region:** ``ds-event-stream-py-sdk``
 
-Example:
+Description
+-----------
+Top-level exports for the DS event stream Python SDK.
+
+Example
+-------
 
 .. code-block:: python
 

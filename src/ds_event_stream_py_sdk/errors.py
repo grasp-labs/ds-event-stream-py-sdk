@@ -1,7 +1,19 @@
 """
-File: errors.py
-Description: Defines the custom exceptions for the DS event stream SDK.
-Region: src/ds_event_stream_py_sdk/errors.py
+**File:** ``errors.py``
+**Region:** ``ds-event-stream-py-sdk``
+
+Description
+-----------
+Custom exception types for the DS event stream SDK.
+
+Example
+-------
+
+.. code-block:: python
+
+    from ds_event_stream_py_sdk.errors import ConsumerError
+
+    raise ConsumerError("Failed to process message")
 """
 
 from typing import Any

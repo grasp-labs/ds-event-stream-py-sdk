@@ -1,5 +1,28 @@
 """
-Event models for version 1 of the data pipeline events.
+**File:** ``v1.py``
+**Region:** ``ds-event-stream-py-sdk``
+
+Description
+-----------
+Event models for version 1 of the data pipeline event stream.
+
+Example
+-------
+
+.. code-block:: python
+
+    from uuid import uuid4
+
+    from ds_event_stream_py_sdk.models.v1 import EventStream
+
+    event = EventStream(
+        session_id=uuid4(),
+        tenant_id=uuid4(),
+        event_type="example.event",
+        event_source="docs",
+        created_by="system",
+        payload={"hello": "world"},
+    )
 """
 
 import hashlib
@@ -42,4 +65,5 @@ class EventStream(Serializable):
         Post-initialize the event stream.
         """
         if self.md5_hash is None:
-            self.md5_hash = hashlib.md5(json.dumps(self.serialize()).encode("utf-8")).hexdigest()
+            payload = json.dumps(self.serialize()).encode("utf-8")
+            self.md5_hash = hashlib.md5(payload, usedforsecurity=False).hexdigest()

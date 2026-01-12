@@ -3,6 +3,7 @@
 
 import os
 import sys
+from importlib.metadata import PackageNotFoundError, version as pkg_version
 
 # Add the parent directory to the Python path to enable importing modules from the project
 sys.path.insert(0, os.path.abspath("../../src"))
@@ -32,7 +33,17 @@ project = "ds-event-stream-py-sdk"
 copyright = "2025, Aider AS"
 author = "Kristoffer Varslott"
 
-version = open("../../VERSION.txt").read().strip()
+try:
+    version = pkg_version("ds-common-serde-py-lib")
+except PackageNotFoundError:
+    try:
+        import tomllib
+    except ModuleNotFoundError:  # pragma: no cover
+        import tomli as tomllib  # type: ignore[import-not-found]
+
+    with open("../../pyproject.toml", "rb") as f:
+        pyproject = tomllib.load(f)
+    version = pyproject["project"]["version"]
 release = version
 
 # -- General configuration ---------------------------------------------------

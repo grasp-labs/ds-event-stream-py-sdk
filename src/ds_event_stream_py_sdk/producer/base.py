@@ -1,12 +1,20 @@
 """
-File: base.py
-Description: Base Kafka producer implementation.
-Region: packages/shared
+**File:** ``base.py``
+**Region:** ``ds-event-stream-py-sdk``
 
-# Example:
-#
-# producer = KafkaProducer(bootstrap_servers="localhost:9092")
-# producer.send_message(topic="events", message=event_stream)
+Description
+-----------
+Base Kafka producer implementation for publishing DS event stream events.
+
+Example
+-------
+
+.. code-block:: python
+
+    from ds_event_stream_py_sdk.producer import KafkaProducer
+
+    producer = KafkaProducer(bootstrap_servers="localhost:9092")
+    producer.close()
 """
 
 import json
