@@ -34,7 +34,7 @@ copyright = "2025, Aider AS"
 author = "Kristoffer Varslott"
 
 try:
-    version = pkg_version("ds-common-serde-py-lib")
+    version = pkg_version("ds-event-stream-py-sdk")
 except PackageNotFoundError:
     try:
         import tomllib
