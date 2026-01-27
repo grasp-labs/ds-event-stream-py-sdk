@@ -28,7 +28,7 @@ from ds_event_stream_py_sdk.errors import ProducerError
 from ds_event_stream_py_sdk.models.v1 import EventStream
 from ds_event_stream_py_sdk.producer import KafkaProducer
 
-Logger(level=logging.DEBUG)
+Logger.configure(level=logging.DEBUG)
 logger = Logger.get_logger(__name__)
 
 

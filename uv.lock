@@ -495,23 +495,23 @@ wheels = [
 
 [[package]]
 name = "ds-common-logger-py-lib"
-version = "0.1.0a1"
+version = "0.1.0a5"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/3f/be/6f24349bc7e0a058fa31faf9854f0930eecc680be86a037103405a778a11/ds_common_logger_py_lib-0.1.0a1.tar.gz", hash = "sha256:bd96a4f23d486d33c568cfb1a079b2203ddc30f37744e1b40d976bd6c723b1c4", size = 17256, upload-time = "2025-12-12T11:37:43.494Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1c/fe/eabb5237c73d44dc23174577e73d8456c64eb331daa51006f0ca4114b17d/ds_common_logger_py_lib-0.1.0a5.tar.gz", hash = "sha256:e34684900e6afd01c4fb10bf01d833926324f5cbb2385cfb77c5a455df2e0a82", size = 21977, upload-time = "2026-01-25T18:29:58.09Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2e/e5/d4a0e8a59d6e3865b2ce2d103807572798fad8e0ffa670753f817c74f2ba/ds_common_logger_py_lib-0.1.0a1-py3-none-any.whl", hash = "sha256:4cae9c07461dcd17b8efff9a6b4ed843c1da2ae685ad950993b63846c374a8b0", size = 12572, upload-time = "2025-12-12T11:37:42.066Z" },
+    { url = "https://files.pythonhosted.org/packages/c3/cf/c0472c2988278a9870692a3995d57dbe13d0b10abb783345196de3129f31/ds_common_logger_py_lib-0.1.0a5-py3-none-any.whl", hash = "sha256:68ad595d9ba3cf55375072d9ce6a97319b7ca0a4551d464ab1bd488d9fbaece2", size = 14733, upload-time = "2026-01-25T18:29:57.118Z" },
 ]
 
 [[package]]
 name = "ds-common-serde-py-lib"
-version = "0.1.0a2"
+version = "0.1.0a3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ds-common-logger-py-lib" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/dc/b1/7ee4534120b7095211d2838c5c70d6d03061030d4fcf91b79308fb9becb5/ds_common_serde_py_lib-0.1.0a2.tar.gz", hash = "sha256:f96056ee3ce77522ceff9bca3312924be62528b8aaddc84848b6993465a6f97c", size = 20780, upload-time = "2026-01-12T16:08:36.887Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5f/00/2877a13899df85949293b63d0c40e04cf7ebe4b4722a2455146cc07e3617/ds_common_serde_py_lib-0.1.0a3.tar.gz", hash = "sha256:97a19ffcd961cfcd22c26883f7ff7be984620ff4c608d3e5349e100e21911b7a", size = 20754, upload-time = "2026-01-26T16:30:19.508Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d0/54/521e186c00443a27332c6b6965f93200f349887e63e03f22d805ecbf4526/ds_common_serde_py_lib-0.1.0a2-py3-none-any.whl", hash = "sha256:6d9cf5597d54d4a1e8e0a4fa23a56c3a26e75851769ddf47a18e76b9ca09281f", size = 16036, upload-time = "2026-01-12T16:08:35.621Z" },
+    { url = "https://files.pythonhosted.org/packages/ec/d4/dcdf562958c472b700b9bd81285e0ce2b917b593a03989c1792c75eafb91/ds_common_serde_py_lib-0.1.0a3-py3-none-any.whl", hash = "sha256:42a5d2200793741a2bc2219934ba5b2806676e3f703fc06edc4feb48a61e1e10", size = 16064, upload-time = "2026-01-26T16:30:17.068Z" },
 ]
 
 [[package]]
@@ -559,8 +559,8 @@ test = [
 requires-dist = [
     { name = "build", marker = "extra == 'dev'", specifier = ">=1.0.0" },
     { name = "confluent-kafka", specifier = ">=2.10.1" },
-    { name = "ds-common-logger-py-lib", specifier = ">=0.1.0a1,<1.0.0" },
-    { name = "ds-common-serde-py-lib", specifier = ">=0.1.0a2,<1.0.0" },
+    { name = "ds-common-logger-py-lib", specifier = ">=0.1.0a5,<1.0.0" },
+    { name = "ds-common-serde-py-lib", specifier = ">=0.1.0a3,<1.0.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.7.0" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3.6.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.4.0" },
@@ -587,7 +587,7 @@ name = "exceptiongroup"
 version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/50/79/66800aadf48771f6b62f7eb014e352e5d06856655206165d775e675a02c9/exceptiongroup-1.3.1.tar.gz", hash = "sha256:8b412432c6055b0b7d14c310000ae93352ed6754f70fa8f7c34141f91c4e3219", size = 30371, upload-time = "2025-11-21T23:01:54.787Z" }
 wheels = [
@@ -656,7 +656,7 @@ name = "importlib-metadata"
 version = "8.7.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "zipp" },
+    { name = "zipp", marker = "python_full_version < '3.12'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f3/49/3b30cad09e7771a4982d9975a8cbf64f00d4a1ececb53297f1d9a7be1b10/importlib_metadata-8.7.1.tar.gz", hash = "sha256:49fef1ae6440c182052f407c8d34a68f72efc36db9ca90dc0113398f2fdde8bb", size = 57107, upload-time = "2025-12-21T10:00:19.278Z" }
 wheels = [

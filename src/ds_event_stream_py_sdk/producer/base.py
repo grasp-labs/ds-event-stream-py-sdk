@@ -23,14 +23,16 @@ from collections.abc import Callable
 from typing import Any
 
 from confluent_kafka import KafkaError, Message, Producer
-from ds_common_logger_py_lib import LoggingMixin
+from ds_common_logger_py_lib import Logger
 from ds_common_serde_py_lib.errors import SerializationError
 
 from ..errors import ProducerError
 from ..models.v1 import EventStream
 
+logger = Logger.get_logger(__name__, package=True)
 
-class KafkaProducer(LoggingMixin):
+
+class KafkaProducer:
     """Base Kafka producer for sending pipeline events."""
 
     def __init__(
@@ -122,7 +124,7 @@ class KafkaProducer(LoggingMixin):
             remaining = self.producer.flush(timeout=flush_timeout)
 
             if remaining != 0:
-                self.log.error(
+                logger.error(
                     "Kafka message delivery timed out",
                     extra={
                         "topic": topic,
@@ -141,9 +143,9 @@ class KafkaProducer(LoggingMixin):
                     },
                 )
 
-            self.log.info("Kafka message delivered", extra={"topic": topic, "key": key})
+            logger.debug("Kafka message delivered", extra={"topic": topic, "key": key})
         except SerializationError as exc:
-            self.log.error(
+            logger.error(
                 "Failed to serialize message",
                 extra={
                     "topic": topic,
@@ -159,7 +161,7 @@ class KafkaProducer(LoggingMixin):
         except ProducerError as exc:
             raise exc
         except Exception as exc:
-            self.log.error(
+            logger.error(
                 "Failed to send kafka message",
                 extra={
                     "topic": topic,
@@ -199,9 +201,9 @@ class KafkaProducer(LoggingMixin):
                     "offset": msg.offset(),
                 }
             )
-            self.log.error("Message delivery failed", extra=extra)
+            logger.error("Message delivery failed", extra=extra)
         else:
-            self.log.info(
+            logger.debug(
                 "Message delivered",
                 extra={
                     "topic": msg.topic(),
@@ -218,4 +220,4 @@ class KafkaProducer(LoggingMixin):
             None
         """
         self.producer.flush(timeout=self.timeout)
-        self.log.info("Producer closed")
+        logger.debug("Producer closed")

@@ -23,12 +23,13 @@ You can also install the package in editable mode and run with ``python``:
 from __future__ import annotations
 
 import json
+import logging
 from uuid import uuid4
 
 from ds_event_stream_py_sdk.models.v1 import EventStream
 from ds_common_logger_py_lib import Logger
 
-Logger()
+Logger.configure(level=logging.DEBUG)
 logger = Logger.get_logger(__name__)
 
 

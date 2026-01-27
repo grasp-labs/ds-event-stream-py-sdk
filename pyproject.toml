@@ -8,8 +8,8 @@ version = "0.1.0.alpha.1"
 description = "A Python package from the DS library collection"
 dependencies = [
     "confluent-kafka>=2.10.1",
-    "ds-common-logger-py-lib>=0.1.0-alpha.1,<1.0.0",
-    "ds-common-serde-py-lib>=0.1.0-alpha.2,<1.0.0",
+    "ds-common-logger-py-lib>=0.1.0-alpha.5,<1.0.0",
+    "ds-common-serde-py-lib>=0.1.0-alpha.3,<1.0.0",
 ]
 requires-python = ">=3.10"
 license = "Apache-2.0"

@@ -25,7 +25,7 @@ from ds_event_stream_py_sdk.consumer import KafkaConsumer
 from ds_event_stream_py_sdk.models.v1 import EventStream
 from ds_common_logger_py_lib import Logger
 
-Logger(level=logging.DEBUG)
+Logger.configure(level=logging.DEBUG)
 logger = Logger.get_logger(__name__)
 
 

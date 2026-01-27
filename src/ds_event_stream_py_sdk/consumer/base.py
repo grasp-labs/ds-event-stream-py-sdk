@@ -25,14 +25,16 @@ from collections.abc import Callable
 from typing import Any
 
 from confluent_kafka import Consumer, KafkaError, Message
-from ds_common_logger_py_lib import LoggingMixin
+from ds_common_logger_py_lib import Logger
 from ds_common_serde_py_lib.errors import DeserializationError
 
 from ..errors import ConsumerError
 from ..models.v1 import EventStream
 
+logger = Logger.get_logger(__name__, package=True)
 
-class KafkaConsumer(LoggingMixin):
+
+class KafkaConsumer:
     """Base Kafka consumer for handling pipeline events."""
 
     def __init__(
@@ -139,7 +141,7 @@ class KafkaConsumer(LoggingMixin):
         # Register the handler for all specified topics
         for topic in topics:
             self.message_handlers[topic] = wrapper
-            self.log.info("Added message handler", extra={"topic": topic})
+            logger.debug("Added message handler", extra={"topic": topic})
 
     def commit_message(self) -> None:
         """
@@ -152,7 +154,7 @@ class KafkaConsumer(LoggingMixin):
             return
         try:
             self.consumer.commit(self.current_message)
-            self.log.info(
+            logger.debug(
                 "Message committed successfully",
                 extra={
                     "topic": self.current_message.topic(),
@@ -161,7 +163,7 @@ class KafkaConsumer(LoggingMixin):
                 },
             )
         except Exception as exc:
-            self.log.error(
+            logger.error(
                 "Failed to commit message",
                 extra={
                     "topic": self.current_message.topic(),
@@ -201,7 +203,7 @@ class KafkaConsumer(LoggingMixin):
                 on_assign=self._on_assign,
                 on_revoke=self._on_revoke,
             )
-            self.log.info("Subscribed to topics", extra={"topics": self.topics})
+            logger.debug("Subscribed to topics", extra={"topics": self.topics})
 
             self.running = True
 
@@ -216,7 +218,7 @@ class KafkaConsumer(LoggingMixin):
                     if msg.error():
                         err = msg.error()
                         if err is not None and err.code() == KafkaError._PARTITION_EOF:
-                            self.log.info(
+                            logger.debug(
                                 "Reached end of partition",
                                 extra={
                                     "topic": msg.topic(),
@@ -224,7 +226,7 @@ class KafkaConsumer(LoggingMixin):
                                 },
                             )
                         else:
-                            self.log.error(
+                            logger.error(
                                 "Consumer error",
                                 extra={
                                     "topic": msg.topic(),
@@ -244,10 +246,10 @@ class KafkaConsumer(LoggingMixin):
                     self._process_message(msg)
 
                 except KeyboardInterrupt:
-                    self.log.info("Received interrupt signal, stopping consumer")
+                    logger.debug("Received interrupt signal, stopping consumer")
                     break
                 except Exception as exc:
-                    self.log.error(
+                    logger.error(
                         "Error processing message",
                         extra={
                             "error": {
@@ -260,7 +262,7 @@ class KafkaConsumer(LoggingMixin):
                     )
 
         except Exception as exc:
-            self.log.error(
+            logger.error(
                 "Failed to start consumer",
                 extra={
                     "error": {
@@ -301,7 +303,7 @@ class KafkaConsumer(LoggingMixin):
             message = EventStream.deserialize(data)
             topic = msg.topic()
 
-            self.log.info(
+            logger.debug(
                 "Received message",
                 extra={
                     "topic": topic,
@@ -313,9 +315,9 @@ class KafkaConsumer(LoggingMixin):
             if topic in self.message_handlers:
                 self.message_handlers[topic](message)
             else:
-                self.log.warning("No handler found for topic", extra={"topic": topic})
+                logger.warning("No handler found for topic", extra={"topic": topic})
         except DeserializationError as exc:
-            self.log.error(
+            logger.error(
                 "Failed to deserialize message",
                 extra={
                     "error": {
@@ -330,7 +332,7 @@ class KafkaConsumer(LoggingMixin):
         except ConsumerError as exc:
             raise exc
         except Exception as exc:
-            self.log.error(
+            logger.error(
                 "Error processing message",
                 extra={
                     "error": {
@@ -358,7 +360,7 @@ class KafkaConsumer(LoggingMixin):
             partitions: The partitions assigned to the consumer.
         """
         member_id = consumer.memberid()
-        self.log.info(
+        logger.debug(
             "Partitions assigned",
             extra={"partitions": partitions, "member_id": member_id},
         )
@@ -372,7 +374,7 @@ class KafkaConsumer(LoggingMixin):
             partitions: The partitions revoked from the consumer.
         """
         member_id = consumer.memberid()
-        self.log.info(
+        logger.debug(
             "Partitions revoked",
             extra={"partitions": partitions, "member_id": member_id},
         )
@@ -388,4 +390,4 @@ class KafkaConsumer(LoggingMixin):
         if self.consumer is None:
             return
         self.consumer.close()
-        self.log.info("Consumer stopped")
+        logger.debug("Consumer stopped")
