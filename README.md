@@ -6,7 +6,7 @@
 [![codecov](https://codecov.io/gh/grasp-labs/ds-event-stream-py-sdk/graph/badge.svg?token=EO3YCNCZFS)](https://codecov.io/gh/grasp-labs/ds-event-stream-py-sdk)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-DS package for ds-event-stream-py-sdk
+DS package for Event Stream Python SDK.
 
 ## Quick Start
 
@@ -108,7 +108,7 @@ uv run pytest tests/test_example.py -v
 │   ├── workflows/            # CI/CD workflows
 │   └── CODEOWNERS            # Code ownership file
 ├── src/
-│   └── ds_common_{name}_py_lib/     # Rename to your module name
+│   └── ds_event_stream_py_sdk/     # Event stream Python SDK
 │       └── __init__.py
 ├── .pre-commit-config.yaml   # Pre-commit hooks configuration
 ├── tests/                    # Test files
@@ -116,7 +116,6 @@ uv run pytest tests/test_example.py -v
 ├── LICENSE-APACHE            # License file
 ├── pyproject.toml            # Project configuration
 ├── Makefile                  # Development commands
-├── VERSION.txt               # Version file
 ├── codecov.yaml              # Codecov configuration
 ├── CONTRIBUTING.md           # Contribution guidelines
 ├── PyPI.md                   # PyPI publishing guide
@@ -136,7 +135,7 @@ uv run pytest tests/test_example.py -v
 
 ## Requirements
 
-- Python 3.9+
+- Python 3.10+
 - [uv](https://github.com/astral-sh/uv) package manager
 - Make (for development commands)
 

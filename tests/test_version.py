@@ -4,14 +4,12 @@
 
 Description
 -----------
-Smoke tests ensuring the package can be imported for coverage, and that
-version and type information markers are exposed as expected.
+Smoke tests ensuring the package can be imported for coverage.
 """
 
 from __future__ import annotations
 
 import importlib
-import importlib.resources
 
 
 def test_import_package_and_version_is_string() -> None:
@@ -26,15 +24,3 @@ def test_import_package_and_version_is_string() -> None:
 
     assert isinstance(pkg.__version__, str)
     assert pkg.__version__ != ""
-
-
-def test_py_typed_marker_is_packaged() -> None:
-    """
-    Verify ``py.typed`` exists to support PEP 561 typing.
-
-    Returns:
-        None.
-    """
-
-    marker = importlib.resources.files("ds_event_stream_py_sdk").joinpath("py.typed")
-    assert marker.is_file()

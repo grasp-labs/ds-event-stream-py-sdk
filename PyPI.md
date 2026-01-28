@@ -1,6 +1,6 @@
 # ds-event-stream-py-sdk
 
-A Python package from the ds-common library collection.
+A Python package from the DS Event Stream Python SDK.
 
 ## Installation
 
@@ -26,20 +26,46 @@ print(f"ds-event-stream-py-sdk version: {__version__}")
 
 ## Features
 
-<!-- List your package features here -->
-- Feature 1: Description of feature 1
-- Feature 2: Description of feature 2
-- Feature 3: Description of feature 3
+- Kafka producer
+- Kafka consumer
+- Event stream model
 
 ## Usage
 
-<!-- Add usage examples here -->
-
 ```python
-# Example usage
-import ds_event_stream_py_sdk
+import logging
+from uuid import uuid4
 
-# Your code examples here
+from ds_common_logger_py_lib import Logger
+from ds_event_stream_py_sdk.errors import ProducerError
+from ds_event_stream_py_sdk.models.v1 import EventStream
+from ds_event_stream_py_sdk.producer import KafkaProducer
+
+Logger.configure(level=logging.DEBUG)
+logger = Logger.get_logger(__name__)
+
+
+producer = KafkaProducer(
+    bootstrap_servers="b0.dev.kafka.ds.local:9095",
+    sasl_username="ds.test.producer.v1",
+    sasl_password="",
+    timeout=5.0,
+)
+
+event = EventStream(
+    session_id=uuid4(),
+    tenant_id=uuid4(),
+    event_type="example.event",
+    event_source="examples",
+    created_by="John Doe",
+    payload={"hello": "world"},
+)
+producer.send_message(
+    topic="ds.test.message.created.v1",
+    message=event,
+    key=str(event.session_id),
+    timeout=5.0,
+)
 ```
 
 ## Requirements
@@ -48,12 +74,6 @@ import ds_event_stream_py_sdk
 - ds-common-logger-py-lib
 - ds-common-serde-py-lib
 - confluent-kafka
-
-## Optional Dependencies
-
-<!-- List optional dependencies if any -->
-- Optional dependency 1: Description
-- Optional dependency 2: Description
 
 ## Documentation
 

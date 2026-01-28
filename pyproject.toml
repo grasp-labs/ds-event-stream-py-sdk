@@ -53,6 +53,7 @@ dev = [
     "sphinx-autoapi>=3.0.0",
     "sphinx-material>=0.0.35",
     "types-confluent-kafka>=1.4.0",
+    "bandit>=1.7.0",
 ]
 test = [
     "pytest>=7.4.0",
