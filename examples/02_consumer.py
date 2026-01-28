@@ -19,8 +19,8 @@ Example
 """
 
 from __future__ import annotations
-import logging
 
+import logging
 from ds_event_stream_py_sdk.consumer import KafkaConsumer
 from ds_event_stream_py_sdk.models.v1 import EventStream
 from ds_common_logger_py_lib import Logger
