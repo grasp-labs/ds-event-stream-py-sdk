@@ -4,7 +4,7 @@
 
 Description
 -----------
-A Python package from the ds-provider-grasp-py-lib library.
+A Python SDK for working with DS event streams, providing Kafka producers, consumers, and related models.
 
 Example
 -------
