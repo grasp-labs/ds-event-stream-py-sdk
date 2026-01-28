@@ -143,7 +143,14 @@ class KafkaProducer:
                     },
                 )
 
-            logger.debug("Kafka message delivered", extra={"topic": topic, "key": key})
+            logger.debug(
+                "Kafka message delivered",
+                extra={
+                    "topic": topic,
+                    "key": key,
+                    "event": message.serialize(),
+                },
+            )
         except SerializationError as exc:
             logger.error(
                 "Failed to serialize message",
