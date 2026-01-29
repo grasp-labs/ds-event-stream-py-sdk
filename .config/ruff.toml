@@ -1,0 +1,31 @@
+line-length = 131
+fix = true
+
+[lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "ARG", # flake8-unused-arguments
+    "SIM", # flake8-simplify
+    "TCH", # flake8-type-checking
+    "PTH", # flake8-use-pathlib
+    "ERA", # eradicate
+    "PL",  # pylint
+    "RUF", # ruff-specific rules
+]
+ignore = [
+    "PLR0913", # too many arguments
+    "PLR0911", # too many return statements
+    "PLR2004", # magic value used in comparison
+]
+
+[lint.per-file-ignores]
+"tests/**/*" = ["PLR2004", "S101", "ARG", "FBT"]
+
+[lint.isort]
+known-first-party = ["ds_event_stream_py_sdk"]

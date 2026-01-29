@@ -1,0 +1,51 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        exclude: '^(k8s/.*/templates/.*\.ya?ml)$'
+      - id: check-added-large-files
+      - id: check-toml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-docstring-first
+      - id: debug-statements
+
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ruff
+        language: system
+        entry: uv run ruff check
+        args: [--config, .config/ruff.toml, --fix, --exit-non-zero-on-fix]
+        files: ^(src|tests)/.*\.py$
+      - id: ruff-format
+        name: ruff-format
+        language: system
+        entry: uv run ruff format
+        args: [--config, .config/ruff.toml]
+        files: ^(src|tests)/.*\.py$
+      - id: mypy
+        name: mypy
+        language: system
+        entry: uv run mypy
+        args: [--config-file, .config/mypy.ini, src]
+        pass_filenames: false
+        files: ^src/
+      - id: bandit
+        name: bandit
+        language: system
+        entry: uv run bandit
+        args: [-r, src]
+        files: ^src/
+        pass_filenames: false
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.38.0
+    hooks:
+      - id: markdownlint
+        args: [--fix]
