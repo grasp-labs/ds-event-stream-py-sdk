@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import importlib
 from typing import Any, cast
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
@@ -163,6 +164,31 @@ def test_send_message_produces_and_flushes(monkeypatch: pytest.MonkeyPatch) -> N
     assert isinstance(produced["value"], (bytes, bytearray))
     assert produced["key"] == b"k1"
     assert client.flushed and client.flushed[-1] == 60.0
+
+
+def test_delivery_log_does_not_include_serialized_event(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Delivery diagnostics contain event type but never the event payload."""
+    client = _FakeProducerClient({})
+    monkeypatch.setattr(producer_base, "Producer", lambda _config: client)
+    logger = MagicMock()
+    monkeypatch.setattr(producer_base, "logger", logger)
+
+    producer = producer_base.KafkaProducer(bootstrap_servers=BOOTSTRAP_SERVERS)
+    event = EventStream(
+        session_id=uuid4(),
+        tenant_id=uuid4(),
+        event_type="test.event",
+        event_source="unit-test",
+        created_by="pytest",
+        payload={"password": "super-secret"},
+    )
+
+    producer.send_message(topic="events", message=event, key="k1")
+
+    delivered = [call for call in logger.debug.call_args_list if call.args and call.args[0] == "Kafka message delivered"]
+    assert delivered
+    assert delivered[-1].kwargs["extra"] == {"topic": "events", "key": "k1", "event_type": "test.event"}
+    assert "super-secret" not in str(delivered[-1])
 
 
 def test_send_message_wraps_unknown_errors_in_producer_error(
