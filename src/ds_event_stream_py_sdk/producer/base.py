@@ -148,7 +148,7 @@ class KafkaProducer:
                 extra={
                     "topic": topic,
                     "key": key,
-                    "event": message.serialize(),
+                    "event_type": message.event_type,
                 },
             )
         except SerializationError as exc:
